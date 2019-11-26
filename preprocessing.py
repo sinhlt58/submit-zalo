@@ -18,12 +18,12 @@ class DataProcessor:
         self.bert_tokenizer = BertTokenizer.from_pretrained("bert-base-multilingual-cased")
         print ("Done init bert_tokenizer!")
 
-    def convert_zalo_to_tfrecord(self, in_dir, file_name):
+    def convert_zalo_to_tfrecord(self, data_dir, file_name):
         if file_name not in ["train", "test", "private"]:
             print ("Invalid file_name {}".format(file_name))
             return
 
-        self._zalo_to_flat_json(in_dir, file_name)
+        self._zalo_to_flat_json(data_dir, file_name)
 
     def _int64_feature(self, values):
         """Returns an int64_list from a bool / enum / int / uint."""
@@ -39,10 +39,10 @@ class DataProcessor:
         tf_example = tf.train.Example(features=tf.train.Features(feature=feature))
         return tf_example.SerializeToString()
 
-    def _zalo_to_flat_json(self, in_dir, file_name):
-        in_json_path = "{}/{}.json".format(in_dir, file_name)
-        out_tsv_path = "data/out_tfrecord/{}.tsv".format(file_name)
-        out_pids_path = "data/out_tfrecord/{}_pids.txt".format(file_name)
+    def _zalo_to_flat_json(self, data_dir, file_name):
+        in_json_path = "{}/{}.json".format(data_dir, file_name)
+        out_tsv_path = "{}/{}.tsv".format(data_dir, file_name)
+        out_pids_path = "{}/{}_pids.txt".format(data_dir, file_name)
 
         data_json = read_json_data(in_json_path)
         # convert to flat converted examples
@@ -109,8 +109,9 @@ class DataProcessor:
             gen, output_types=tf.string, output_shapes=())
 
         num_examples = tsv_df.shape[0]
-        record_path = "data/out_tfrecord/{}@{}.tfrecord".format(
-            file_name, num_examples
+        print ("num_examples test: ", num_examples)
+        record_path = "{}/{}.tfrecord".format(
+            data_dir, file_name
         )
         writer = tf.data.experimental.TFRecordWriter(record_path)
         writer.write(serialized_features_dataset)
@@ -146,12 +147,6 @@ class DataProcessor:
 
         return text
 
-    def _convert_to_tsv(self, in_dir, file_name):
-        pass
-
-    def _tsv_to_tfrecord(self, in_dir, file_name):
-        pass
-
     def _write_tsv(self, tsv_file, df):
         df.to_csv(tsv_file, encoding="utf-8", quoting=csv.QUOTE_NONE, sep="\t", index=False,
                     columns=["index", "question", "sentence", "label"])
@@ -167,6 +162,8 @@ class DataProcessor:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
+    parser.add_argument("--data_dir", default="data", required=True, type=str,
+                        help="The data folder")
     parser.add_argument("--file_name", default="test", required=True, type=str,
                         help="The input data file is a zalo format .json file."
                               "It takes only one of train|test|private")
@@ -174,4 +171,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     data_processor = DataProcessor()
-    data_processor.convert_zalo_to_tfrecord("data/in_zalo", args.file_name)
+    data_processor.convert_zalo_to_tfrecord(args.data_dir, args.file_name)

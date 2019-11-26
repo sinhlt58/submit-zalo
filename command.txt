@@ -1,0 +1,1 @@
+docker run --gpus all --rm -v $(pwd)/data:/data -v $(pwd)/result:/result zaloai_qa:1.0.0 /bin/bash /model/predict.sh
