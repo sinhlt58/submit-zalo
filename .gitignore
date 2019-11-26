@@ -102,3 +102,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+data/out_tfrecord
+data/train
+.vscode
+saved_models
